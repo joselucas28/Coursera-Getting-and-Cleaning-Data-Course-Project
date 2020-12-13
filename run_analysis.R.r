@@ -1,30 +1,45 @@
-X_test <- read.table("C:\\Users\\Jose Lucas\\Documents\\Coursera\\Getting and Cleaning data\\project\\getdata_projectfiles_UCI HAR Dataset\\UCI HAR Dataset\\test\\X_test.txt")
-Y_test <- read.table("C:\\Users\\Jose Lucas\\Documents\\Coursera\\Getting and Cleaning data\\project\\getdata_projectfiles_UCI HAR Dataset\\UCI HAR Dataset\\test\\Y_test.txt")
-X_train <- read.table("C:\\Users\\Jose Lucas\\Documents\\Coursera\\Getting and Cleaning data\\project\\getdata_projectfiles_UCI HAR Dataset\\UCI HAR Dataset\\train\\X_train.txt")
-Y_train <- read.table("C:\\Users\\Jose Lucas\\Documents\\Coursera\\Getting and Cleaning data\\project\\getdata_projectfiles_UCI HAR Dataset\\UCI HAR Dataset\\train\\Y_train.txt")
-head(X_train)
-dataset1 <- data.frame(X_test)
-dataset2 <- data.frame(Y_test)
-dataset3 <- data.frame(X_train)
-dataset4 <- data.frame(Y_train)
-#merging datasets
-dataX <- rbind(dataset1, dataset3)
-dataY <- rbind(dataset2, dataset4)
-#calculating mean of datasets
-meanX <- sapply(dataX, mean)
-meanY <- sapply(dataY, mean)
-print(meanX)
-print(meanY)
-#calculating sd of datasets
-sdX <- sapply(dataX, sd)
-sdY <- sapply(dataY, sd)
-print(sdX)
-print(sdY)
-#add labels
-labels <- read.table("C:\\Users\\Jose Lucas\\Documents\\Coursera\\Getting and Cleaning data\\project\\getdata_projectfiles_UCI HAR Dataset\\UCI HAR Dataset\\features.txt")
-labelsdf <- labels$V2
-install.packages('dplyr')
-library(dplyr)
+# run_analysis.R
+
+#0. prepare LIBs
+library(reshape2)
+
+
+#1. get dataset from web
+rawDataDir <- "./rawData"
+rawDataUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
+rawDataFilename <- "rawData.zip"
+rawDataDFn <- paste(rawDataDir, "/", "rawData.zip", sep = "")
+dataDir <- "./data"
+
+if (!file.exists(rawDataDir)) {
+    dir.create(rawDataDir)
+    download.file(url = rawDataUrl, destfile = rawDataDFn)
+}
+if (!file.exists(dataDir)) {
+    dir.create(dataDir)
+    unzip(zipfile = rawDataDFn, exdir = dataDir)
+}
+
+
+#2. merge {train, test} data set
+# refer: http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones
+# train data
+x_train <- read.table(paste(sep = "", dataDir, "/UCI HAR Dataset/train/X_train.txt"))
+y_train <- read.table(paste(sep = "", dataDir, "/UCI HAR Dataset/train/Y_train.txt"))
+s_train <- read.table(paste(sep = "", dataDir, "/UCI HAR Dataset/train/subject_train.txt"))
+
+# test data
+x_test <- read.table(paste(sep = "", dataDir, "/UCI HAR Dataset/test/X_test.txt"))
+y_test <- read.table(paste(sep = "", dataDir, "/UCI HAR Dataset/test/Y_test.txt"))
+s_test <- read.table(paste(sep = "", dataDir, "/UCI HAR Dataset/test/subject_test.txt"))
+
+# merge {train, test} data
+x_data <- rbind(x_train, x_test)
+y_data <- rbind(y_train, y_test)
+s_data <- rbind(s_train, s_test)
+
+
+#3. load feature & activity info
 # feature info
 feature <- read.table(paste(sep = "", dataDir, "/UCI HAR Dataset/features.txt"))
 
@@ -54,4 +69,3 @@ meltedData <- melt(allData, id = c("Subject", "Activity"))
 tidyData <- dcast(meltedData, Subject + Activity ~ variable, mean)
 
 write.table(tidyData, "./tidy_dataset.txt", row.names = FALSE, quote = FALSE)
-
